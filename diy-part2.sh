@@ -45,4 +45,6 @@ git clone --depth=1 -b master https://github.com/jerrykuku/luci-theme-argon pack
 git clone --depth=1 -b master https://github.com/vernesong/OpenClash package/luci-app-openclash
 
 
-
+# 设置nlbwmon独立菜单
+sed -i 's/services\/nlbw/nlbw/g; /path/s/admin\///g' feeds/luci/applications/luci-app-nlbwmon/root/usr/share/luci/menu.d/luci-app-nlbwmon.json
+sed -i 's/services\///g' feeds/luci/applications/luci-app-nlbwmon/htdocs/luci-static/resources/view/nlbw/config.js
