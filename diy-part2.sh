@@ -50,25 +50,20 @@ sed -i 's/services\/nlbw/nlbw/g; /path/s/admin\///g' feeds/luci/applications/luc
 sed -i 's/services\///g' feeds/luci/applications/luci-app-nlbwmon/htdocs/luci-static/resources/view/nlbw/config.js
 
 # DIY script part2 - 编译中配置：下载OpenClash核心/规则文件（编译阶段自动部署）
-
 # 1. 创建OpenClash核心目录（不存在则创建，确保目录结构完整）
 [ -d files/etc/openclash/core ] || mkdir -p files/etc/openclash/core
-
 # 2. 定义各类文件下载地址（保留你原地址，适配x86_64架构）
 CLASH_META_URL="https://raw.githubusercontent.com/vernesong/OpenClash/core/dev/meta/clash-linux-amd64-v1.tar.gz"
 COUNTRY_URL="https://raw.githubusercontent.com/alecthw/mmdb_china_ip_list/release/lite/Country.mmdb"
 GEOIP_URL="https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/geoip.dat"
 GEOSITE_URL="https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/geosite.dat"
-
 # 3. 下载并部署文件（静默下载，适配编译脚本无交互执行）
 echo -e "\033[32m开始下载OpenClash Meta核心及规则文件...\033[0m"
 wget -qO- $CLASH_META_URL | tar xOz > files/etc/openclash/core/clash_meta
 wget -qO- $COUNTRY_URL > files/etc/openclash/Country.mmdb
 wget -qO- $GEOIP_URL > files/etc/openclash/GeoIP.dat
 wget -qO- $GEOSITE_URL > files/etc/openclash/GeoSite.dat
-
 # 4. 赋予核心文件执行权限（确保OpenClash能正常启动核心）
 chmod +x files/etc/openclash/core/clash*
-
 # 5. 下载完成提示（方便编译时查看执行状态）
 echo -e "\033[32m✅ OpenClash核心、Country.mmdb、GeoIP.dat、GeoSite.dat 下载部署完成！\033[0m"
