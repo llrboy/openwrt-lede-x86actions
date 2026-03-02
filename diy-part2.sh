@@ -8,18 +8,16 @@
 #
 # This is free software, licensed under the MIT License.
 # See /LICENSE for more information.
-#
-# 选择5.15内核
-#sed -i 's/6.12/5.15/g' target/linux/x86/Makefile
+
+
 # 设置默认ip
-sed -i 's/192.168.1.1/192.168.81.1/g' package/base-files/files/bin/config_generate
+# sed -i 's/192.168.1.1/192.168.81.1/g' package/base-files/files/bin/config_generate
 
 # 移除要替换的包
 rm -rf feeds/luci/themes/luci-theme-argon
 
-
 # 设置默认主题
-#sed -i 's/luci-theme-bootstrap/luci-theme-argon/g' feeds/luci/collections/luci-light/Makefile
+sed -i 's/luci-theme-bootstrap/luci-theme-argon/g' feeds/luci/collections/luci-light/Makefile
 
 # x86 型号只显示 CPU 型号
 sed -i 's/${g}.*/${a}${b}${c}${d}${e}${f}${hydrid}/g' package/lean/autocore/files/x86/autocore
@@ -43,11 +41,13 @@ function git_sparse_clone() {
 git clone https://github.com/nhhqgirl/luci-app-onliner.git package/lean/luci-app-onliner
 git clone --depth=1 -b master https://github.com/jerrykuku/luci-theme-argon package/luci-theme-argon
 git clone --depth=1 -b master https://github.com/vernesong/OpenClash package/luci-app-openclash
+git clone https://github.com/nhhqgirl/luci-app-wolplus.git package/lean/luci-app-wolplus
 
 
 # 设置nlbwmon独立菜单
 sed -i 's/services\/nlbw/nlbw/g; /path/s/admin\///g' feeds/luci/applications/luci-app-nlbwmon/root/usr/share/luci/menu.d/luci-app-nlbwmon.json
 sed -i 's/services\///g' feeds/luci/applications/luci-app-nlbwmon/htdocs/luci-static/resources/view/nlbw/config.js
+
 
 # DIY script part2 - 编译中配置：下载OpenClash核心/规则文件（编译阶段自动部署）
 # 1. 创建OpenClash核心目录（不存在则创建，确保目录结构完整）
@@ -67,3 +67,59 @@ wget -qO- $GEOSITE_URL > files/etc/openclash/GeoSite.dat
 chmod +x files/etc/openclash/core/clash*
 # 5. 下载完成提示（方便编译时查看执行状态）
 echo -e "\033[32m✅ OpenClash核心、Country.mmdb、GeoIP.dat、GeoSite.dat 下载部署完成！\033[0m"
+
+# -----------------------------------------------------------------------------
+# 1. 预置网络配置 (Network Configuration)
+# -----------------------------------------------------------------------------
+# 创建自定义配置文件的存放目录（如果不存在）
+mkdir -p package/base-files/files/etc/config
+
+# 确保有默认值（防止本地测试时变量为空导致配置错误，这里设为占位符）
+: "${PPPOE_USERNAME:=username_placeholder}"
+: "${PPPOE_PASSWORD:=password_placeholder}"
+
+# 将你的 network 文件内容写入目标位置
+# 解释：EOF 块中的 ${变量} 会被自动替换为环境变量中的真实值
+cat > package/base-files/files/etc/config/network <<EOF
+
+config interface 'loopback'
+	option device 'lo'
+	option proto 'static'
+	option ipaddr '127.0.0.1'
+	option netmask '255.0.0.0'
+
+config globals 'globals'
+	option packet_steering '1'
+
+config device
+	option name 'br-lan'
+	option type 'bridge'
+	list ports 'eth0'
+	list ports 'eth1'
+	list ports 'eth2'
+
+config interface 'lan'
+	option device 'br-lan'
+	option proto 'static'
+	option ipaddr '192.168.81.1'
+	option netmask '255.255.255.0'
+	option ip6assign '60'
+	option ip6ifaceid 'random'
+
+config interface 'wan'
+	option device 'eth3'
+	option proto 'dhcp'
+
+config interface 'wan6'
+	option proto 'dhcpv6'
+	option device 'eth3'
+	option reqaddress 'try'
+	option reqprefix 'auto'
+
+config interface 'VPN'
+	option device 'ipsec0'
+	option proto 'static'
+	option ipaddr '192.168.0.1'
+	option netmask '255.255.255.0'
+
+EOF
